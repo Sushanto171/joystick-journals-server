@@ -25,8 +25,40 @@ const run = async () => {
   const reviewsCollection = client
     .db("joyStick-journalsDB")
     .collection("reviews");
+  const watchListCollection = client
+    .db("joyStick-journalsDB")
+    .collection("watchList");
 
   try {
+    // watchList api
+    app.put("/watchList/:email", async (req, res) => {
+      let user = false;
+      const email = req.params.email.trim().toLowerCase();
+      const data = req.body;
+      const filter = { email: email };
+      const option = { upsert: true };
+      const userExist = await watchListCollection.findOne(filter);
+      user = userExist?._id ? true : false;
+      if (!userExist) {
+        const result = await watchListCollection.insertOne(data);
+
+        user = result.acknowledged ? true : false;
+      }
+      if (user) {
+        const existingIds = userExist?.ids ? userExist.ids : [];
+        const { id: clientID } = data;
+        existingIds.push(clientID);
+        const finalUpdatedDoc = {
+          $set: { ids: existingIds },
+        };
+        const finalResult = await watchListCollection.updateOne(
+          filter,
+          finalUpdatedDoc
+        );
+        res.send(finalResult);
+      }
+    });
+
     // reviews api
     app.get("/reviews", async (req, res) => {
       const query = {};
@@ -36,7 +68,6 @@ const run = async () => {
 
     app.post("/reviews", async (req, res) => {
       const reviewsData = req.body;
-      console.log(reviewsData);
       const result = await reviewsCollection.insertOne(reviewsData);
       res.send(result);
     });
