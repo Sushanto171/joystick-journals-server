@@ -28,10 +28,24 @@ const run = async () => {
 
   try {
     // reviews api
+    app.get("/reviews", async (req, res) => {
+      const query = {};
+      const result = await reviewsCollection.find(query).toArray();
+      res.send(result);
+    });
+
     app.post("/reviews", async (req, res) => {
       const reviewsData = req.body;
       console.log(reviewsData);
       const result = await reviewsCollection.insertOne(reviewsData);
+      res.send(result);
+    });
+
+    //
+    app.get("/reviews/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await reviewsCollection.findOne(query);
       res.send(result);
     });
 
@@ -46,7 +60,6 @@ const run = async () => {
     app.put("/users/:email", async (req, res) => {
       const email = req.params.email;
       const data = req.body;
-      // console.log(data, email);
       const filter = { email: email };
       const option = { upsert: true };
       const updatedDoc = {
