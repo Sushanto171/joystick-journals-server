@@ -22,9 +22,27 @@ const client = new MongoClient(uri, {
 
 const run = async () => {
   const usersCollection = client.db("joyStick-journalsDB").collection("users");
+  const reviewsCollection = client
+    .db("joyStick-journalsDB")
+    .collection("reviews");
 
   try {
+    // reviews api
+    app.post("/reviews", async (req, res) => {
+      const reviewsData = req.body;
+      console.log(reviewsData);
+      const result = await reviewsCollection.insertOne(reviewsData);
+      res.send(result);
+    });
+
     // users api
+    app.get("/users/:email", async (req, res) => {
+      const email = req.params.email;
+      const query = { email: email };
+      const result = await usersCollection.findOne(query);
+      res.send(result);
+    });
+
     app.put("/users/:email", async (req, res) => {
       const email = req.params.email;
       const data = req.body;
