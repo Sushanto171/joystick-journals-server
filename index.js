@@ -30,34 +30,16 @@ const run = async () => {
     .collection("watchList");
 
   try {
-    // watchList api
-    // app.put("/watchList/:email", async (req, res) => {
-    //   let user = false;
-    //   const email = req.params.email.trim().toLowerCase();
-    //   const data = req.body;
-    //   const filter = { email: email };
-    //   const option = { upsert: true };
-    //   const userExist = await watchListCollection.findOne(filter);
-    //   user = userExist?._id ? true : false;
-    //   if (!userExist) {
-    //     const result = await watchListCollection.insertOne(data);
+    // filter by id to watchList collection
+    app.get("/watchList/:email", async (req, res) => {
+      const email = req.params.email.trim().toLowerCase();
+      const filter = { email };
+      const result = await watchListCollection.findOne(filter);
 
-    //     user = result.acknowledged ? true : false;
-    //   }
-    //   if (user) {
-    //     const existingIds = userExist?.ids ? userExist.ids : [];
-    //     const { id: clientID } = data;
-    //     existingIds.push(clientID);
-    //     const finalUpdatedDoc = {
-    //       $set: { ids: existingIds },
-    //     };
-    //     const finalResult = await watchListCollection.updateOne(
-    //       filter,
-    //       finalUpdatedDoc
-    //     );
-    //     res.send(finalResult);
-    //   }
-    // });
+      res.send(result === null ? { message: "No data found" } : result);
+    });
+
+    // watchList id add
     app.put("/watchList/:email", async (req, res) => {
       const email = req.params.email.trim().toLowerCase();
       const data = req.body;
@@ -70,8 +52,9 @@ const run = async () => {
       const userExist = await watchListCollection.findOne(filter);
 
       if (!userExist) {
-        const newUser = { email, ids: [data.id] };
+        const newUser = { email, ids: [data.id], user: data.user };
         const result = await watchListCollection.insertOne(newUser);
+        return res.send({ message: "ID added to watchlist!" });
       } else {
         const existingIds = userExist.ids || [];
         if (!existingIds.includes(data.id)) {
@@ -89,9 +72,44 @@ const run = async () => {
       }
     });
 
-    // reviews api
-    app.get("/reviews", async (req, res) => {
-      const query = {};
+    // reviews apis
+
+    app.patch("/reviews/:id", async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+      if (!id || typeof data !== "object") {
+        res.send({ message: "Invalid id or object" });
+      }
+      const filter = { _id: new ObjectId(id) };
+      const updatedDoc = {
+        $set: data,
+      };
+      const option = { upsert: false };
+      const result = await reviewsCollection.updateOne(
+        filter,
+        updatedDoc,
+        option
+      );
+      res.send(result);
+      console.log(result);
+    });
+
+    app.delete("/reviews", async (req, res) => {
+      const id = req.body.id;
+      if (!id) {
+        res.status(404).send("invalid id");
+      }
+      const filter = { _id: new ObjectId(id) };
+      const result = await reviewsCollection.deleteOne(filter);
+      res.send(result);
+    });
+
+    app.get("/reviews?", async (req, res) => {
+      const email = req.query.userEmail;
+      let query = {};
+      if (email) {
+        query = { userEmail: email };
+      }
       const result = await reviewsCollection.find(query).toArray();
       res.send(result);
     });
