@@ -31,31 +31,61 @@ const run = async () => {
 
   try {
     // watchList api
+    // app.put("/watchList/:email", async (req, res) => {
+    //   let user = false;
+    //   const email = req.params.email.trim().toLowerCase();
+    //   const data = req.body;
+    //   const filter = { email: email };
+    //   const option = { upsert: true };
+    //   const userExist = await watchListCollection.findOne(filter);
+    //   user = userExist?._id ? true : false;
+    //   if (!userExist) {
+    //     const result = await watchListCollection.insertOne(data);
+
+    //     user = result.acknowledged ? true : false;
+    //   }
+    //   if (user) {
+    //     const existingIds = userExist?.ids ? userExist.ids : [];
+    //     const { id: clientID } = data;
+    //     existingIds.push(clientID);
+    //     const finalUpdatedDoc = {
+    //       $set: { ids: existingIds },
+    //     };
+    //     const finalResult = await watchListCollection.updateOne(
+    //       filter,
+    //       finalUpdatedDoc
+    //     );
+    //     res.send(finalResult);
+    //   }
+    // });
     app.put("/watchList/:email", async (req, res) => {
-      let user = false;
       const email = req.params.email.trim().toLowerCase();
       const data = req.body;
-      const filter = { email: email };
-      const option = { upsert: true };
-      const userExist = await watchListCollection.findOne(filter);
-      user = userExist?._id ? true : false;
-      if (!userExist) {
-        const result = await watchListCollection.insertOne(data);
 
-        user = result.acknowledged ? true : false;
+      if (!email || !data.id) {
+        return res.status(400).send({ error: "Invalid email or id" });
       }
-      if (user) {
-        const existingIds = userExist?.ids ? userExist.ids : [];
-        const { id: clientID } = data;
-        existingIds.push(clientID);
-        const finalUpdatedDoc = {
-          $set: { ids: existingIds },
-        };
-        const finalResult = await watchListCollection.updateOne(
-          filter,
-          finalUpdatedDoc
-        );
-        res.send(finalResult);
+
+      const filter = { email: email };
+      const userExist = await watchListCollection.findOne(filter);
+
+      if (!userExist) {
+        const newUser = { email, ids: [data.id] };
+        const result = await watchListCollection.insertOne(newUser);
+      } else {
+        const existingIds = userExist.ids || [];
+        if (!existingIds.includes(data.id)) {
+          existingIds.push(data.id);
+          const updatedDoc = { $set: { ids: existingIds } };
+          const result = await watchListCollection.updateOne(
+            filter,
+            updatedDoc
+          );
+          if (result.modifiedCount > 0) {
+            return res.send({ message: "ID added to watchlist!" });
+          }
+        }
+        return res.send({ message: "ID already exists in watchlist!" });
       }
     });
 
