@@ -43,7 +43,6 @@ const run = async () => {
     app.put("/watchList/:email", async (req, res) => {
       const email = req.params.email.trim().toLowerCase();
       const data = req.body;
-
       if (!email || !data.id) {
         return res.status(400).send({ error: "Invalid email or id" });
       }
@@ -52,7 +51,12 @@ const run = async () => {
       const userExist = await watchListCollection.findOne(filter);
 
       if (!userExist) {
-        const newUser = { email, ids: [data.id], user: data.user };
+        const newUser = {
+          email,
+          ids: [data.id],
+          user: data.user,
+          isComplete: data.isComplete,
+        };
         const result = await watchListCollection.insertOne(newUser);
         return res.send({ message: "ID added to watchlist!" });
       } else {
@@ -91,7 +95,6 @@ const run = async () => {
         option
       );
       res.send(result);
-      console.log(result);
     });
 
     app.delete("/reviews", async (req, res) => {
@@ -105,8 +108,14 @@ const run = async () => {
     });
 
     app.get("/reviews?", async (req, res) => {
-      const email = req.query.userEmail;
+      const { email, arrayOfIds } = req.query;
       let query = {};
+
+      if (arrayOfIds) {
+        const convertIds = arrayOfIds.split(",");
+        const objectIds = convertIds.map((id) => new ObjectId(id));
+        query = { _id: { $in: objectIds } };
+      }
       if (email) {
         query = { userEmail: email };
       }
