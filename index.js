@@ -53,13 +53,14 @@ const run = async () => {
     app.put("/watchList/:email", async (req, res) => {
       const email = req.params.email.trim().toLowerCase();
       const data = req.body;
+      console.log("hit me", data);
       if (!email || !data.id) {
         return res.status(400).send({ error: "Invalid email or id" });
       }
 
       const filter = { email: email };
       const userExist = await watchListCollection.findOne(filter);
-
+      // console.log(userExist);
       if (!userExist) {
         const newUser = {
           email,
