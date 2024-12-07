@@ -9,8 +9,8 @@ const port = process.env.PORT || 4000;
 app.use(express.json());
 app.use(cors());
 
-// const uri = `mongodb+srv://${process.env.key}:${process.env.pass}@cluster0.0zizn.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
-const uri = "mongodb://localhost:27017/";
+const uri = `mongodb+srv://${process.env.key}:${process.env.pass}@cluster0.0zizn.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
+// const uri = "mongodb://localhost:27017/";
 
 const client = new MongoClient(uri, {
   serverApi: {
@@ -37,6 +37,16 @@ const run = async () => {
       const result = await watchListCollection.findOne(filter);
 
       res.send(result === null ? { message: "No data found" } : result);
+    });
+
+    // update watchList
+    app.put("/updateWatchList/:email", async (req, res) => {
+      const data = req.body;
+      const email = req.params.email;
+      const filter = { email: email };
+      const updatedDoc = { $set: data };
+      const result = await watchListCollection.updateOne(filter, updatedDoc);
+      res.send(result);
     });
 
     // watchList id add
@@ -162,8 +172,8 @@ const run = async () => {
     });
 
     // comment out must
-    await client.connect();
-    await client.db("admin").command({ ping: 1 });
+    // await client.connect();
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
