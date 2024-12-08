@@ -53,7 +53,6 @@ const run = async () => {
     app.put("/watchList/:email", async (req, res) => {
       const email = req.params.email.trim().toLowerCase();
       const data = req.body;
-      console.log("hit me", data);
       if (!email || !data.id) {
         return res.status(400).send({ error: "Invalid email or id" });
       }
@@ -69,7 +68,7 @@ const run = async () => {
           isComplete: data.isComplete,
         };
         const result = await watchListCollection.insertOne(newUser);
-        return res.send({ message: "ID added to watchlist!" });
+        return res.send({ message: "Game added to watchlist!" });
       } else {
         const existingIds = userExist.ids || [];
         if (!existingIds.includes(data.id)) {
@@ -80,10 +79,10 @@ const run = async () => {
             updatedDoc
           );
           if (result.modifiedCount > 0) {
-            return res.send({ message: "ID added to watchlist!" });
+            return res.send({ message: "Game added to watchlist!" });
           }
         }
-        return res.send({ message: "ID already exists in watchlist!" });
+        return res.send({ message: "Game already exists in watchlist!" });
       }
     });
 
@@ -119,18 +118,41 @@ const run = async () => {
     });
 
     app.get("/reviews?", async (req, res) => {
-      const { email, arrayOfIds } = req.query;
+      const { userEmail, arrayOfIds, rating, limit, sort, filter } = req.query;
       let query = {};
-
+      let option = {};
       if (arrayOfIds) {
         const convertIds = arrayOfIds.split(",");
         const objectIds = convertIds.map((id) => new ObjectId(id));
         query = { _id: { $in: objectIds } };
       }
-      if (email) {
-        query = { userEmail: email };
+      if (userEmail) {
+        query = { userEmail: userEmail };
       }
-      const result = await reviewsCollection.find(query).toArray();
+
+      if (rating && limit) {
+        query = { rating: { $gt: "3" } };
+        option = { limit: 6 };
+      }
+      // filter
+      if (filter) {
+        query = { genres: filter };
+        option = {};
+      }
+
+      // sort
+      if (sort) {
+        query = {};
+        const shortOption = {};
+        shortOption[sort] = 1;
+        const result = await reviewsCollection
+          .find(query)
+          .sort(shortOption)
+          .toArray();
+        res.send(result);
+        return;
+      }
+      const result = await reviewsCollection.find(query, option).toArray();
       res.send(result);
     });
 
