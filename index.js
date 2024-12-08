@@ -134,12 +134,6 @@ const run = async () => {
         query = { rating: { $gt: "3" } };
         option = { limit: 6 };
       }
-      // filter
-      if (filter) {
-        query = { genres: filter };
-        option = {};
-      }
-
       // sort
       if (sort) {
         query = {};
@@ -152,6 +146,12 @@ const run = async () => {
         res.send(result);
         return;
       }
+      // filter
+      if (filter) {
+        query = { genres: filter };
+        option = {};
+      }
+
       const result = await reviewsCollection.find(query, option).toArray();
       res.send(result);
     });
