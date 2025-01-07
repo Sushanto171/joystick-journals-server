@@ -121,6 +121,13 @@ const run = async () => {
       res.send(result);
     });
 
+    app.get("/reviews/:id", async (req, res) => {
+      const id = req.params.id;
+      const result = await newsCollection.findOne({ _id: new ObjectId(id) });
+
+      res.send(result);
+    });
+
     app.get("/reviews", async (req, res) => {
       const { userEmail, arrayOfIds, rating, limit, sort, filter } = req.query;
       let query = {};
