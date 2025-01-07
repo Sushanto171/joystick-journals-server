@@ -28,6 +28,10 @@ const run = async () => {
   const watchListCollection = client
     .db("joyStick-journalsDB")
     .collection("watchList");
+  const upcomingCollection = client
+    .db("joyStick-journalsDB")
+    .collection("upcomingGames");
+  const newsCollection = client.db("joyStick-journalsDB").collection("news");
 
   try {
     // filter by id to watchList collection
@@ -117,7 +121,7 @@ const run = async () => {
       res.send(result);
     });
 
-    app.get("/reviews?", async (req, res) => {
+    app.get("/reviews", async (req, res) => {
       const { userEmail, arrayOfIds, rating, limit, sort, filter } = req.query;
       let query = {};
       let option = {};
@@ -159,6 +163,17 @@ const run = async () => {
     app.post("/reviews", async (req, res) => {
       const reviewsData = req.body;
       const result = await reviewsCollection.insertOne(reviewsData);
+      res.send(result);
+    });
+    // upcoming-games
+    app.get("/upcoming-games", async (req, res) => {
+      const result = await upcomingCollection.find({}).toArray();
+      res.send(result);
+    });
+
+    // news-games
+    app.get("/news", async (req, res) => {
+      const result = await newsCollection.find({}).toArray();
       res.send(result);
     });
 
