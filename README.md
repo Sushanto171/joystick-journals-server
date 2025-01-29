@@ -9,7 +9,7 @@
 ### Site Link:
 
 - [@Live URL](https://joystick-journals.web.app/)
-- [@Github Repo.](https://github.com/programming-hero-web-course2/b10-a10-server-side-Sushanto171)
+- [@Github Repo.](https://github.com/Sushanto171/joystick-journals)
 
 ---
 
